@@ -5,222 +5,131 @@ import React from 'react-native';
 const {
   AppRegistry,
   Component,
+  Image,
   StyleSheet,
   Text,
   View,
   ListView,
   TouchableOpacity,
+  TouchableHighlight,
   AlertIndicatorIOS,
   ActivityIndicatorIOS,
   AlertIOS
 } = React;
 
-var API_URL = 'http://demo9383702.mockable.io/users';
+var APIs = require('./constants/constants_api.js');
+var PARAMs = require('./constants/constants_params.js');
 
-var styles = require('../style/style_listview.js');
+var domain = "http://" + APIs.DOMAIN + ":" + APIs.PORT;
+var UPCOMING_EVENTS_API = domain + APIs.GET_UPCOMING_EVENTS;
+
+var styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F5FCFF',
+        padding: 10
+    },
+    thumbnail: {
+        width: 53,
+        height: 81,
+        marginRight: 10
+    },
+    rightContainer: {
+        flex: 1
+    },
+    title: {
+        fontSize: 20,
+        marginBottom: 8
+    },
+    author: {
+        color: '#656565'
+    },
+    separator: {
+       height: 1,
+       backgroundColor: '#dddddd'
+    },
+    listView: {
+       backgroundColor: '#F5FCFF'
+    },
+    loading: {
+       flex: 1,
+       alignItems: 'center',
+       justifyContent: 'center'
+    }
+});
 
 class TabOne extends Component {
   constructor(props) {
     super(props);
-    this.state = this.getInitialState();
-    this.bindMethods();
+    this.state = {
+        isLoading: true,
+        dataSource: new ListView.DataSource({
+            rowHasChanged: (row1, row2) => row1 !== row2
+        })
+    };
   }
 
-  bindMethods() {
-    if (! this.bindableMethods) {
-      return;
-    }   
-
-    for (var methodName in this.bindableMethods) {
-      this[methodName] = this.bindableMethods[methodName].bind(this);
-    }
-  }
-
-  getInitialState() {
-    var getSectionData = (dataBlob, sectionID) => {
-      return dataBlob[sectionID];
-    }
-
-    var getRowData = (dataBlob, sectionID, rowID) => {
-      return dataBlob[sectionID + ':' + rowID];
-    }
-
-    return {
-      loaded : false,
-      dataSource : new ListView.DataSource({
-        getSectionData          : getSectionData,
-        getRowData              : getRowData,
-        rowHasChanged           : (row1, row2) => row1 !== row2,
-        sectionHeaderHasChanged : (s1, s2) => s1 !== s2
-      })
-    }
-  }
-    
   componentDidMount() {
     this.fetchData();
   }
 
-  fetchData () {
-        fetch(API_URL).then((response) => response.json()).then((responseData) => {
-            var organizations = responseData.results,
-                length = organizations.length,
-                dataBlob = {},
-                sectionIDs = [],
-                rowIDs = [],
-                organization,
-                users,
-                userLength,
-                user,
-                i,
-                j;
-
-            for (i = 0; i < length; i++) {
-                organization = organizations[i];
-
-                sectionIDs.push(organization.id);
-                dataBlob[organization.id] = organization.organization;
-
-                users = organization.users;
-                userLength = users.length;
-                
-                rowIDs[i] = [];
-
-                for(j = 0; j < userLength; j++) {
-                    user = users[j].user;
-                    rowIDs[i].push(user.md5);
-
-                    dataBlob[organization.id + ':' + user.md5] = user;
-                }
-            }
-
-            this.setState({
-                dataSource : this.state.dataSource.cloneWithRowsAndSections(dataBlob, sectionIDs, rowIDs),
-                loaded     : true
-            });
-
-        }).done();        
-    }
+  fetchData() {
+       fetch(UPCOMING_EVENTS_API)
+       .then((response) => response.json())
+       .then((responseData) => {
+           this.setState({
+               dataSource: this.state.dataSource.cloneWithRows(responseData),
+               isLoading: false
+           });
+       })
+       .done();
+   }
 
   render() {
-        if (!this.state.loaded) {
-            return this.renderLoadingView();
-        }
-
-        return this.renderListView();
+    if (this.state.isLoading) {
+        return this.renderLoadingView();
     }
-
-    renderLoadingView() {
-        return (
-            <View style={styles.header}>
-                <View style={styles.container}>
-                    <ActivityIndicatorIOS
-                        animating={!this.state.loaded}
-                        style={[styles.activityIndicator, {height: 80}]}
-                        size="large"
-                    />
-                </View>
-            </View>
-        );
-    }
-
-    renderListView() {
-        return (
-            <View style={styles.container}>
-                <ListView
-                    dataSource = {this.state.dataSource}
-                    style      = {styles.listview}
-                    renderRow  = {this.renderRow}
-                    renderSectionHeader = {this.renderSectionHeader}
-                />
-            </View>
-        );
-    }
-
-    renderSectionHeader(sectionData, sectionID) {
-        return (
-            <View style={styles.section}>
-                <Text style={styles.text}>{sectionData}</Text>
-            </View>
-        ); 
-    }
-}
-
-Object.assign(TabOne.prototype, {
-    bindableMethods : {
-        renderRow : function (rowData, sectionID, rowID) {
-            return (
-                <TouchableOpacity onPress={() => this.onPressRow(rowData, sectionID)}>
-                    <View style={styles.rowStyle}>
-                        <Text style={styles.rowText}>{rowData.name.title} {rowData.name.first} {rowData.name.last}</Text>        
+    return (
+        <ListView
+            dataSource={this.state.dataSource}
+            renderRow={this.renderEvent.bind(this)}
+            style={styles.listView}
+            />
+    );
+  }
+  renderLoadingView() {
+    return (
+        <View style={styles.loading}>
+            <ActivityIndicatorIOS
+                size='large'/>
+            <Text>
+                Loading events...
+            </Text>
+        </View>
+    );
+  }
+  
+  renderEvent(event) {
+       return (
+            <TouchableHighlight>
+                <View>
+                    <View style={styles.container}>
+                        <Image
+			    source={{uri: event.pic_url}}
+                            style={styles.thumbnail} />
+                        <View style={styles.rightContainer}>
+                            <Text style={styles.title}>{event.host_name}</Text>
+                            <Text style={styles.author}>{event.event_time}</Text>
+                        </View>
                     </View>
-                </TouchableOpacity>
-            );
-        },
-        onPressRow : function (rowData, sectionID) {
-            var buttons = [
-                {
-                    text : 'Cancel'
-                },
-                {
-                    text    : 'OK',
-                    onPress : () => this.createCalendarEvent(rowData, sectionID)
-                }
-            ]
-            AlertIOS.alert('User\'s Email is ' + rowData.email, null, null);
-        }
-    }
-});
-
-var styles = StyleSheet.create({
-    container: {
-        flex: 1
-    },
-    activityIndicator: {
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    header: {
-        height: 60,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#3F51B5',
-        flexDirection: 'column',
-        paddingTop: 25
-    },
-    headerText: {
-        fontWeight: 'bold',
-        fontSize: 20,
-        color: 'white'
-    },
-    text: {
-        color: 'white',
-        paddingHorizontal: 8,
-        fontSize: 16
-    },
-    rowStyle: {
-        paddingVertical: 20,
-        paddingLeft: 16,
-        borderTopColor: 'white',
-        borderLeftColor: 'white',
-        borderRightColor: 'white',
-        borderBottomColor: '#E0E0E0',
-        borderWidth: 1
-    },
-    rowText: {
-        color: '#212121',
-        fontSize: 16
-    },
-    subText: {
-        fontSize: 14,
-        color: '#757575'
-    },
-    section: {
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        padding: 6,
-        backgroundColor: '#2196F3'
-    }
-});
+                    <View style={styles.separator} />
+                </View>
+            </TouchableHighlight>
+       );
+   }
+}
 
 module.exports = TabOne;
