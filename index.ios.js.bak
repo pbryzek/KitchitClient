@@ -1,0 +1,56 @@
+/**
+ * Sample React Native App
+ * https://github.com/facebook/react-native
+ */
+'use strict';
+
+var Calendar = require('./js/ios/calendar_tab.ios');
+var Upcoming = require('./js/ios/upcoming_tab.ios');
+
+import React, {
+  AppRegistry,
+  Component,
+  StyleSheet,
+  TabBarIOS,
+  Text,
+  View
+} from 'react-native';
+
+class Kitchit extends Component {
+  render() {
+    return (
+      <TabBarIOS selectedTab={this.state.selectedTab}>
+        <TabBarIOS.Item
+          selected={this.state.selectedTab === 'upcoming'}
+	  title="Upcoming"
+          icon={{uri:'top_charts'}}
+          onPress={() => {
+              this.setState({
+                  selectedTab: 'upcoming',
+              });
+          }}>
+            <Upcoming/>
+        </TabBarIOS.Item>
+        <TabBarIOS.Item
+          selected={this.state.selectedTab === 'calendar'}
+	  title="Calendar"
+          icon={{uri:'timer'}}
+          onPress={() => {
+                this.setState({
+                    selectedTab: 'calendar',
+                });
+          }}>
+          <Calendar/>
+        </TabBarIOS.Item>
+      </TabBarIOS>
+    );
+  }
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedTab: 'upcoming'
+    };
+  }
+}
+
+AppRegistry.registerComponent('Kitchit', () => Kitchit);
