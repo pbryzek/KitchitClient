@@ -20,9 +20,13 @@ const {
 var APIs = require('./constants/constants_api.js');
 var PARAMs = require('./constants/constants_params.js');
 var EventDetail = require('./event_detail.js');
+var GLOBALs = require('./constants/globals.js');
 
-var domain = "http://" + APIs.DOMAIN + ":" + APIs.PORT;
-var UPCOMING_EVENTS_API = domain + APIs.GET_UPCOMING_EVENTS;
+//TODO get the userId correctly
+var userId = 1;
+var params = {};
+params[PARAMs.USERID] = userId;
+var upcomingEventsPath = GLOBALs.createUrl(APIs.GET_UPCOMING_EVENTS, params);
 
 var styles = StyleSheet.create({
     container: {
@@ -78,13 +82,21 @@ class TabOne extends Component {
   }
 
   fetchData() {
-       fetch(UPCOMING_EVENTS_API)
+       fetch(upcomingEventsPath)
        .then((response) => response.json())
        .then((responseData) => {
-           this.setState({
-               dataSource: this.state.dataSource.cloneWithRows(responseData),
-               isLoading: false
-           });
+	   var success = responseData[PARAMs.SUCCESS];
+	   if(success) {
+	       var events = responseData[PARAMs.EVENTS];
+	       console.log("events = " + events);
+               this.setState({
+                   dataSource: this.state.dataSource.cloneWithRows(events),
+                   isLoading: false
+               });
+	   } else {
+	       var errMsg = responseData[PARAMs.ERRORMSG];
+               AlertIOS.alert( 'There was an error downloading the upcoming events.', errMsg);
+	   }
        })
        .done();
    }
