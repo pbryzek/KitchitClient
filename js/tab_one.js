@@ -19,6 +19,7 @@ const {
 
 var APIs = require('./constants/constants_api.js');
 var PARAMs = require('./constants/constants_params.js');
+var EventDetail = require('./event_detail.js');
 
 var domain = "http://" + APIs.DOMAIN + ":" + APIs.PORT;
 var UPCOMING_EVENTS_API = domain + APIs.GET_UPCOMING_EVENTS;
@@ -111,10 +112,17 @@ class TabOne extends Component {
         </View>
     );
   }
-  
+
+  showEventDetail(event) {
+       this.props.navigator.push({
+           title: event.host_name,
+           component: <EventDetail event={event}/>,
+       });
+   } 
+ 
   renderEvent(event) {
        return (
-            <TouchableHighlight>
+            <TouchableHighlight onPress={() => this.showEventDetail(event)}  underlayColor='#dddddd'>
                 <View>
                     <View style={styles.container}>
                         <Image
