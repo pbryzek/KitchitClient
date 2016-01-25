@@ -7,6 +7,7 @@ var APIs = require('./constants/constants_api.js');
 var PARAMs = require('./constants/constants_params.js');
 var GLOBALs = require('./constants/globals.js');
 var MapView = require('react-native-maps');
+//var Node = require('react-if-comp');
 
 const {
     LinkingIOS,
@@ -91,6 +92,52 @@ class EventDetail extends Component {
 	LinkingIOS.openURL(url);
 
     }
+    checkinPress() {
+        var event = this.props.event;
+        var eventId = event.id;
+
+        //TODO get the userId correctly
+        var userId = 1;
+        var params = {};
+        params[PARAMs.USERID] = userId;
+        params[PARAMs.EVENTID] = eventId;
+
+        var checkinPath = GLOBALs.createUrl(APIs.CHECKIN_USER, params);
+        fetch(checkinPath)
+        .then((response) => response.json())
+        .then((responseData) => {
+                var success = responseData[PARAMs.SUCCESS];
+                if(success) {
+                        AlertIOS.alert( 'You successfully checked into this event.', '');
+                } else {
+                        var errMsg = responseData[PARAMs.ERRORMSG];
+			if (errMsg.indexOf('duplicate key value violates unique constraint')) {
+				AlertIOS.alert('You are already checked into this event.');
+			} else {
+                        	AlertIOS.alert( 'There was an error checking into this event.', errMsg);
+			}
+                }
+
+                this.props.navigator.pop();
+        })
+        .catch((error) => {
+                console.warn(error);
+        });
+
+    }
+    cancelPress() {
+        var event = this.props.event;
+        var eventId = event.id;
+
+        //TODO get the userId correctly
+        var userId = 1;
+
+        var params = {};
+        params[PARAMs.USERID] = userId;
+        params[PARAMs.EVENTID] = eventId;
+
+	AlertIOS.alert( 'TODO: implement the cancel API call.');
+    }
     declinePress() {
 	var event = this.props.event;
         var eventId = event.id;
@@ -152,17 +199,30 @@ class EventDetail extends Component {
 
             <View style={styles.container}>
                 <Image style={styles.image} source={{uri: imageURI}} />
-                <Text style={styles.description}>{description}</Text>
+		<View style={styles.rowContainer}>
+                	<Text style={styles.description}>{description}</Text>
+			<Text style={styles.description}>{event.event_time}</Text>
+		</View>
 		<View style={styles.rowContainer}>
 
-	        <Button
-        	    style={{fontSize: 20, color: 'green', marginRight:10}}
-        	    onPress={this.acceptPress.bind(this)}
-                >Accept</Button>
 		<Button
+                    style={{fontSize: 20, color: 'green', marginRight:10}}
+                    onPress={this.acceptPress.bind(this)}
+                >Accept</Button>
+                <Button
                     style={{fontSize: 20, color: 'red'}}
                     onPress={this.declinePress.bind(this)}
                 >Reject</Button>
+		</View>
+		<View style={styles.rowContainer}>
+		<Button
+                    style={{fontSize: 20, color: 'red', marginRight:10}}
+                    onPress={this.cancelPress.bind(this)}
+                >Cancel Event</Button>
+                <Button
+                    style={{fontSize: 20, color: 'blue'}}
+                    onPress={this.checkinPress.bind(this)}
+                >Checkin</Button>
 		</View>
 	    </View>
 	   </View>

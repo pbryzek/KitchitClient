@@ -31,7 +31,7 @@ class Kitchit extends Component {
         <TabBarNavigator.Item title='Upcoming Events' icon={{uri: globals.base64Icon, scale: 3}} defaultTab>
           <TabOne/>
         </TabBarNavigator.Item>
-        <TabBarNavigator.Item title='Calendar'>
+        <TabBarNavigator.Item title='Calendar' icon={{uri: globals.base64Icon, scale: 3}}>
           <TabTwo/>
         </TabBarNavigator.Item>
       </TabBarNavigator>

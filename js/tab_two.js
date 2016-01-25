@@ -63,6 +63,7 @@ class TabTwo extends Component {
   }
   cancelEvent(date) {
     var event = this.findDateInEvents(date);
+    AlertIOS.alert( 'TODO: Cancel the event with eventId = ' + event.id);
   }
   componentDidMount() {
     this.fetchData();
