@@ -4,6 +4,7 @@ module.exports = {
     CHECKIN_USER : "/checkinUser",
     UPDATE_CHEF_LOCATION : "/updateChefLocation",
     DECLINE_EVENT : "/declineEvent",
+    CANCEL_EVENT : "/cancelEvent",
     ACCEPT_EVENT : "/acceptEvent",
 
     PORT: 8082,

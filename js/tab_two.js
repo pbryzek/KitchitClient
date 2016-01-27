@@ -63,7 +63,26 @@ class TabTwo extends Component {
   }
   cancelEvent(date) {
     var event = this.findDateInEvents(date);
-    AlertIOS.alert( 'TODO: Cancel the event with eventId = ' + event.id);
+    var userId = 1;
+    var eventId = event.id;
+    var params = {};
+    params[PARAMs.USERID] = userId;
+    params[PARAMs.EVENTID] = eventId;
+    var cancelEventPath = GLOBALs.createUrl(APIs.CANCEL_EVENT, params);
+
+    fetch(cancelEventPath)
+       .then((response) => response.json())
+       .then((responseData) => {
+           var success = responseData[PARAMs.SUCCESS];
+           if(success) {
+               AlertIOS.alert('Event was successfully cancelled');
+               this.forceUpdate();
+           } else {
+               var errMsg = responseData[PARAMs.ERRORMSG];
+               AlertIOS.alert( 'There was an error downloading the upcoming events.', errMsg);
+           }
+       })
+       .done();
   }
   componentDidMount() {
     this.fetchData();

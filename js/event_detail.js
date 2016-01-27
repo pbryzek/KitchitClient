@@ -87,7 +87,6 @@ class EventDetail extends Component {
 	var event = this.props.event;
 	var lat = event.host_latitude;
 	var long = event.host_longitude;
-	console.log("lat = " + lat);
 	var url = 'http://maps.apple.com/?ll=' + lat + ',' + long;
 	LinkingIOS.openURL(url);
 
@@ -99,8 +98,12 @@ class EventDetail extends Component {
         //TODO get the userId correctly
         var userId = 1;
         var params = {};
+        var latitude = 37.7833;
+        var longitude = -122.4167;
         params[PARAMs.USERID] = userId;
         params[PARAMs.EVENTID] = eventId;
+	params[PARAMs.LATITUDE] = latitude;
+        params[PARAMs.LONGITUDE] = longitude;
 
         var checkinPath = GLOBALs.createUrl(APIs.CHECKIN_USER, params);
         fetch(checkinPath)
@@ -109,21 +112,19 @@ class EventDetail extends Component {
                 var success = responseData[PARAMs.SUCCESS];
                 if(success) {
                         AlertIOS.alert( 'You successfully checked into this event.', '');
+                        this.props.navigator.pop();
                 } else {
                         var errMsg = responseData[PARAMs.ERRORMSG];
-			if (errMsg.indexOf('duplicate key value violates unique constraint')) {
+			if (errMsg.indexOf('duplicate key value violates unique constraint') != -1) {
 				AlertIOS.alert('You are already checked into this event.');
 			} else {
                         	AlertIOS.alert( 'There was an error checking into this event.', errMsg);
 			}
                 }
-
-                this.props.navigator.pop();
         })
         .catch((error) => {
                 console.warn(error);
         });
-
     }
     cancelPress() {
         var event = this.props.event;
@@ -136,7 +137,21 @@ class EventDetail extends Component {
         params[PARAMs.USERID] = userId;
         params[PARAMs.EVENTID] = eventId;
 
-	AlertIOS.alert( 'TODO: implement the cancel API call.');
+        var cancelEventPath = GLOBALs.createUrl(APIs.CANCEL_EVENT, params);
+    
+        fetch(cancelEventPath)
+       .then((response) => response.json())
+       .then((responseData) => {
+           var success = responseData[PARAMs.SUCCESS];
+           if(success) {
+               AlertIOS.alert('Event was successfully cancelled');
+               this.props.navigator.pop();
+           } else {
+               var errMsg = responseData[PARAMs.ERRORMSG];
+               AlertIOS.alert( 'There was an error canceling this event.', errMsg);
+           }
+       })
+       .done();
     }
     declinePress() {
 	var event = this.props.event;
