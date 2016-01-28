@@ -7,7 +7,6 @@ var APIs = require('./constants/constants_api.js');
 var PARAMs = require('./constants/constants_params.js');
 var GLOBALs = require('./constants/globals.js');
 var MapView = require('react-native-maps');
-//var Node = require('react-if-comp');
 
 const {
     LinkingIOS,
@@ -200,6 +199,20 @@ class EventDetail extends Component {
 	this.event = event;
         var imageURI = (typeof event.pic_url !== 'undefined') ? event.pic_url : '';
         var description = (typeof event.host_name !== 'undefined') ? event.host_name : '';
+	var displayAcceptButtons = true;
+        
+        var acceptBtn;
+	var rejectBtn;
+	var checkinBtn;
+        var cancelBtn;
+        if (this.props.displayAcceptBtns) {
+            acceptBtn = <Button style={{fontSize: 20, color: 'green', marginRight:10}} onPress={this.acceptPress.bind(this)}>Accept</Button>;
+            rejectBtn = <Button style={{fontSize: 20, color: 'red'}} onPress={this.declinePress.bind(this)}>Reject</Button>;
+        } else {
+	    cancelBtn = <Button style={{fontSize: 20, color: 'red'}} onPress={this.cancelPress.bind(this)}>Cancel Event</Button>;
+            checkinBtn = <Button style={{fontSize: 20, color: 'green', marginRight:10}} onPress={this.checkinPress.bind(this)}>Checkin</Button>; 
+        }
+
         return (
 	<View>
 	    <MapView
@@ -219,25 +232,10 @@ class EventDetail extends Component {
 			<Text style={styles.description}>{event.event_time}</Text>
 		</View>
 		<View style={styles.rowContainer}>
-
-		<Button
-                    style={{fontSize: 20, color: 'green', marginRight:10}}
-                    onPress={this.acceptPress.bind(this)}
-                >Accept</Button>
-                <Button
-                    style={{fontSize: 20, color: 'red'}}
-                    onPress={this.declinePress.bind(this)}
-                >Reject</Button>
-		</View>
-		<View style={styles.rowContainer}>
-		<Button
-                    style={{fontSize: 20, color: 'red', marginRight:10}}
-                    onPress={this.cancelPress.bind(this)}
-                >Cancel Event</Button>
-                <Button
-                    style={{fontSize: 20, color: 'blue'}}
-                    onPress={this.checkinPress.bind(this)}
-                >Checkin</Button>
+		{acceptBtn}
+		{rejectBtn}
+		{checkinBtn}
+		{cancelBtn}
 		</View>
 	    </View>
 	   </View>

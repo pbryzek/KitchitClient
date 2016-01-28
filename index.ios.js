@@ -1,4 +1,4 @@
-'use strict';
+//'use strict';
 
 import React from 'react-native';
 const {
@@ -31,9 +31,6 @@ class Kitchit extends Component {
   }
 
   sendLocationToServer(position) {
-      console.log("position = " + JSON.stringify(position));
-      //var initialPosition = JSON.stringify(position);
-
         //TODO get the userId correctly
         var userId = 1;
         var coords = position.coords;
@@ -54,7 +51,6 @@ class Kitchit extends Component {
                 if(success) {
                 } else {
                         var errMsg = responseData[PARAMs.ERRORMSG];
-			console.log("Error sending location data " + errMsg);
                 }
         })
         .catch((error) => {

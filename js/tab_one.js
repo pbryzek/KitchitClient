@@ -1,4 +1,4 @@
-'use strict';
+//'use strict';
 
 import React from 'react-native';
 
@@ -128,7 +128,7 @@ class TabOne extends Component {
   showEventDetail(event) {
        this.props.navigator.push({
            title: event.host_name,
-           component: <EventDetail event={event}/>,
+           component: <EventDetail displayAcceptBtns={true} event={event}/>,
        });
    } 
  

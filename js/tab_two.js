@@ -1,4 +1,4 @@
-'use strict';
+//'use strict';
 
 import React from 'react-native';
 
@@ -58,7 +58,7 @@ class TabTwo extends Component {
     var event = this.findDateInEvents(date);
     this.props.navigator.push({
         title: event.host_name,
-        component: <EventDetail event={event}/>,
+        component: <EventDetail displayAcceptBtns={false} event={event}/>,
     });
   }
   cancelEvent(date) {
@@ -108,7 +108,6 @@ class TabTwo extends Component {
            var success = responseData[PARAMs.SUCCESS];
            if(success) {
                this.events = responseData[PARAMs.EVENTS];
-               console.log("events = " + this.events);
 	       var dates = [];
 	       for (var i = 0; i < this.events.length; i++) {
 	           var e = this.events[i];
