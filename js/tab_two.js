@@ -8,6 +8,8 @@ var PARAMs = require('./constants/constants_params.js');
 var APIs = require('./constants/constants_api.js');
 var moment = require('moment');
 var EventDetail = require('./event_detail.js');
+var store = require('react-native-simple-store');
+var STORAGE = require('./constants/constants_storage.js');
 
 const {
   Alert,
@@ -70,12 +72,42 @@ class TabTwo extends Component {
     params[PARAMs.EVENTID] = eventId;
     var cancelEventPath = GLOBALs.createUrl(APIs.CANCEL_EVENT, params);
 
+    store.get(STORAGE.UPCOMING_EVENTS).then((upcomingEvents) => {
+        upcomingEvents.push(event);
+        store.save(STORAGE.UPCOMING_EVENTS, upcomingEvents).done();
+    })
+    .done();
+
     fetch(cancelEventPath)
        .then((response) => response.json())
        .then((responseData) => {
            var success = responseData[PARAMs.SUCCESS];
            if(success) {
                AlertIOS.alert('Event was successfully cancelled');
+
+               var newEvents = [];
+	       var newEvent;
+               for (var i = 0; i < this.events; i++) {
+                   var event = this.events[i];
+                   if (event.id != eventId) {
+                       newEvents.push(event);
+                   } else {
+                       newEvent = event;
+                   }
+               }
+               this.events = newEvents;
+
+               var newEventDates = [];
+               for (var i = 0; i < this.events.length; i++) {
+                   var e = this.events[i];
+                   var eDate = e.event_time;
+                   var indexOfSpace = eDate.indexOf("T");
+                   var eDateFormat = eDate.substring(0, indexOfSpace);
+                   if(eDateFormat != date) {
+                       newEventDates.push(eDateFormat);
+                   }
+               }
+               this.eventDates = newEventDates;
                this.forceUpdate();
            } else {
                var errMsg = responseData[PARAMs.ERRORMSG];
@@ -88,6 +120,19 @@ class TabTwo extends Component {
     this.fetchData();
   }
 
+  componentWillReceiveProps(nextProps) {
+      this.refreshView();
+  }
+
+  refreshView() {
+      store.get(STORAGE.MY_EVENTS).then((myEvents) => {
+          if (myEvents && this.events && myEvents.length != this.events.length) {
+              this.events = myEvents;
+              this.updateDates();
+          }
+      })
+      .done(); 
+  }
   findDateInEvents(date){
     for (var i = 0; i < this.events.length; i++) {
         var e = this.events[i];
@@ -101,6 +146,19 @@ class TabTwo extends Component {
     return null;
   }
 
+  updateDates() {
+  	var dates = [];
+        for (var i = 0; i < this.events.length; i++) {
+            var e = this.events[i];
+            var eDate = e.event_time;
+            var indexOfSpace = eDate.indexOf("T");
+            var eDateFormat = eDate.substring(0, indexOfSpace);
+            dates.push(eDateFormat);
+         }
+         this.eventDates = dates;
+         this.forceUpdate();
+  }
+
   fetchData() {
        fetch(upcomingEventsPath)
        .then((response) => response.json())
@@ -108,16 +166,11 @@ class TabTwo extends Component {
            var success = responseData[PARAMs.SUCCESS];
            if(success) {
                this.events = responseData[PARAMs.EVENTS];
-	       var dates = [];
-	       for (var i = 0; i < this.events.length; i++) {
-	           var e = this.events[i];
-		   var eDate = e.event_time;
-		   var indexOfSpace = eDate.indexOf("T");
-                   var eDateFormat = eDate.substring(0, indexOfSpace);
-		   dates.push(eDateFormat);
-	       }
-	       this.eventDates = dates;
-	       this.forceUpdate();
+               if(this.events && this.events > 0) {
+	           store.save(STORAGE.MY_EVENTS, this.events).done();
+               }
+
+	       this.updateDates();
            } else {
                var errMsg = responseData[PARAMs.ERRORMSG];
                AlertIOS.alert( 'There was an error downloading the upcoming events.', errMsg);

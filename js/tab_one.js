@@ -87,12 +87,11 @@ class TabOne extends Component {
 
   componentWillReceiveProps(nextProps) {
       this.updateList();
-      console.log("receive props");
   }
   
   updateList() {
     store.get(STORAGE.UPCOMING_EVENTS).then((events) => {
-        if(events.length != this.events.length) {
+        if(events && events.length != this.events.length) {
 	    this.updateDataSource(events);
         }
     })
@@ -108,17 +107,18 @@ class TabOne extends Component {
   }
 
   fetchData() {
-	console.log("fetch data");
        fetch(upcomingEventsPath)
        .then((response) => response.json())
        .then((responseData) => {
 	   var success = responseData[PARAMs.SUCCESS];
 	   if(success) {
 	       var events = responseData[PARAMs.EVENTS];
-	       store.save(STORAGE.UPCOMING_EVENTS, events).then(() => {
-	           this.updateDataSource(events);
-	       })
-	       .done();
+	       if (events) {
+	           store.save(STORAGE.UPCOMING_EVENTS, events).then(() => {
+	               this.updateDataSource(events);
+	           })
+	           .done();
+	           }
 	   } else {
 	       var errMsg = responseData[PARAMs.ERRORMSG];
                AlertIOS.alert( 'There was an error downloading the upcoming events.', errMsg);

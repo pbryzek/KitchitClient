@@ -68,8 +68,12 @@ class EventDetail extends Component {
 		        myNewEvents.push(event);
 		    }
                 }
-		store.save(STORAGE.UPCOMING_EVENTS, upComingEvents).done();
-		store.save(STORAGE.MY_EVENTS, myEvents).done();
+                if(upComingEvents) {
+		    store.save(STORAGE.UPCOMING_EVENTS, upComingEvents).done();
+                }
+                if(myEvents) {
+		    store.save(STORAGE.MY_EVENTS, myEvents).done();
+                }
             })
             .done();
         })
