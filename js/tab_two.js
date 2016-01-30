@@ -126,7 +126,12 @@ class TabTwo extends Component {
 
   refreshView() {
       store.get(STORAGE.MY_EVENTS).then((myEvents) => {
-          if (myEvents && this.events && myEvents.length != this.events.length) {
+if(myEvents) {
+console.log("my = " + myEvents.length);
+console.log("this = " + this.events.length);
+}
+          if (myEvents && myEvents.length != this.events.length) {
+console.log("refresh 2");
               this.events = myEvents;
               this.updateDates();
           }

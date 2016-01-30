@@ -65,29 +65,48 @@ class EventDetail extends Component {
                     if (myEvent.id == eventId) {
                         upComingEvents.push(myEvent);
                     } else {
-		        myNewEvents.push(event);
+		        myNewEvents.push(myEvent);
 		    }
                 }
-                if(upComingEvents) {
-		    store.save(STORAGE.UPCOMING_EVENTS, upComingEvents).done();
-                }
-                if(myEvents) {
-		    store.save(STORAGE.MY_EVENTS, myEvents).done();
-                }
+		store.save(STORAGE.UPCOMING_EVENTS, upComingEvents).done();
+		store.save(STORAGE.MY_EVENTS, myNewEvents).done();
             })
             .done();
         })
         .done();
     }
-    removeEventFromStorage(eventId, alertMsg) {
+    removeEventFromStorage(removeEvent, alertMsg) {
+        var eventId = removeEvent.id;
+        store.get(STORAGE.MY_EVENTS).then((events) => {
+	    if(events && events.length > 0) {
+	    var doSave = false;
+            var eventsLength = events.length;
+            for (var i = 0; i < eventsLength; i++) {
+                var event = events[i];
+                if (event.id == eventId) {
+		    doSave = true;
+                    events.push(event);
+                }
+            }
+	    if(doSave) {
+                store.save(STORAGE.MY_EVENTS, events).done();
+            }
+            } else {
+                var eventsArr = []; 
+                eventsArr.push(removeEvent);
+		store.save(STORAGE.MY_EVENTS, eventsArr).done();
+            }
+ 	}).done();
         store.get(STORAGE.UPCOMING_EVENTS).then((events) => {
-            var newEvents = [];
+	    var newEvents = [];
+	    if (events && events.length > 0) {
 	    for (var i = 0; i < events.length; i++) {
                 var event = events[i];
                 if (event.id != eventId) {
                     newEvents.push(event);
                 }
             }
+	    } 
             store.save(STORAGE.UPCOMING_EVENTS, newEvents).then(() => {
 	        AlertIOS.alert(alertMsg);
 	        this.props.navigator.pop();
@@ -114,7 +133,7 @@ class EventDetail extends Component {
         .then((responseData) => {
 		var success = responseData[PARAMs.SUCCESS];
 		if(success) {
-			this.removeEventFromStorage(eventId, 'You successfully accepted this event.');
+			this.removeEventFromStorage(event, 'You successfully accepted this event.');
 		} else {
 			var errMsg = responseData[PARAMs.ERRORMSG];
 			AlertIOS.alert( 'There was an error accepting this event.', errMsg);
@@ -210,7 +229,7 @@ class EventDetail extends Component {
   	.then((responseData) => {
 		var success = responseData[PARAMs.SUCCESS];
                 if(success) {
-			this.removeEventFromStorage(eventId, 'You successfully declined this event.');
+			this.removeEventFromStorage(event, 'You successfully declined this event.');
                 } else {
                         var errMsg = responseData[PARAMs.ERRORMSG];
                         AlertIOS.alert( 'There was an error declining this event.', errMsg);
@@ -231,7 +250,7 @@ class EventDetail extends Component {
     	    latitude: event.host_latitude,
     	    longitude: event.host_longitude,
     	    title: event.host_name,
-    	    subtitle: ''
+    	    subtitle: 'Test'
   	}
 	];
 
