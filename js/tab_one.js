@@ -2,6 +2,8 @@
 
 import React from 'react-native';
 
+var store = require('react-native-simple-store');
+
 const {
   AppRegistry,
   Component,
@@ -21,6 +23,7 @@ var APIs = require('./constants/constants_api.js');
 var PARAMs = require('./constants/constants_params.js');
 var EventDetail = require('./event_detail.js');
 var GLOBALs = require('./constants/globals.js');
+var STORAGE = require('./constants/constants_storage.js'); 
 
 //TODO get the userId correctly
 var userId = 1;
@@ -75,24 +78,47 @@ class TabOne extends Component {
             rowHasChanged: (row1, row2) => row1 !== row2
         })
     };
+    this.events = [];
   }
 
   componentDidMount() {
     this.fetchData();
   }
 
+  componentWillReceiveProps(nextProps) {
+      this.updateList();
+      console.log("receive props");
+  }
+  
+  updateList() {
+    store.get(STORAGE.UPCOMING_EVENTS).then((events) => {
+        if(events.length != this.events.length) {
+	    this.updateDataSource(events);
+        }
+    })
+    .done();
+  }
+
+  updateDataSource(events) {
+      this.events = events;
+      this.setState({
+          dataSource: this.state.dataSource.cloneWithRows(events),
+          isLoading: false
+      });
+  }
+
   fetchData() {
+	console.log("fetch data");
        fetch(upcomingEventsPath)
        .then((response) => response.json())
        .then((responseData) => {
 	   var success = responseData[PARAMs.SUCCESS];
 	   if(success) {
 	       var events = responseData[PARAMs.EVENTS];
-	       console.log("events = " + events);
-               this.setState({
-                   dataSource: this.state.dataSource.cloneWithRows(events),
-                   isLoading: false
-               });
+	       store.save(STORAGE.UPCOMING_EVENTS, events).then(() => {
+	           this.updateDataSource(events);
+	       })
+	       .done();
 	   } else {
 	       var errMsg = responseData[PARAMs.ERRORMSG];
                AlertIOS.alert( 'There was an error downloading the upcoming events.', errMsg);

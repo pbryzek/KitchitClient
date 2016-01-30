@@ -7,6 +7,8 @@ var APIs = require('./constants/constants_api.js');
 var PARAMs = require('./constants/constants_params.js');
 var GLOBALs = require('./constants/globals.js');
 var MapView = require('react-native-maps');
+var store = require('react-native-simple-store');
+var STORAGE = require('./constants/constants_storage.js');
 
 const {
     LinkingIOS,
@@ -53,6 +55,43 @@ var styles = StyleSheet.create({
 });
  
 class EventDetail extends Component {
+    addEventToMyEvents(eventId) {
+        store.get(STORAGE.UPCOMING_EVENTS).then((upComingEvents) => {
+            store.get(STORAGE.MY_EVENTS).then((myEvents) => {
+		var myNewEvents = [];
+                for (var i = 0; i < myEvents.length; i++) {
+                    var myEvent = myEvents[i];
+		    //Since the event was cancelled, add it back to upcoming events.
+                    if (myEvent.id == eventId) {
+                        upComingEvents.push(myEvent);
+                    } else {
+		        myNewEvents.push(event);
+		    }
+                }
+		store.save(STORAGE.UPCOMING_EVENTS, upComingEvents).done();
+		store.save(STORAGE.MY_EVENTS, myEvents).done();
+            })
+            .done();
+        })
+        .done();
+    }
+    removeEventFromStorage(eventId, alertMsg) {
+        store.get(STORAGE.UPCOMING_EVENTS).then((events) => {
+            var newEvents = [];
+	    for (var i = 0; i < events.length; i++) {
+                var event = events[i];
+                if (event.id != eventId) {
+                    newEvents.push(event);
+                }
+            }
+            store.save(STORAGE.UPCOMING_EVENTS, newEvents).then(() => {
+	        AlertIOS.alert(alertMsg);
+	        this.props.navigator.pop();
+            })
+            .done();
+        })
+        .done();
+    }
     acceptPress() {
 	var event = this.props.event;
 	var eventId = event.id;
@@ -71,8 +110,7 @@ class EventDetail extends Component {
         .then((responseData) => {
 		var success = responseData[PARAMs.SUCCESS];
 		if(success) {
-			AlertIOS.alert( 'You successfully accepted this event.', '');
-			this.props.navigator.pop();
+			this.removeEventFromStorage(eventId, 'You successfully accepted this event.');
 		} else {
 			var errMsg = responseData[PARAMs.ERRORMSG];
 			AlertIOS.alert( 'There was an error accepting this event.', errMsg);
@@ -88,7 +126,6 @@ class EventDetail extends Component {
 	var long = event.host_longitude;
 	var url = 'http://maps.apple.com/?ll=' + lat + ',' + long;
 	LinkingIOS.openURL(url);
-
     }
     checkinPress() {
         var event = this.props.event;
@@ -143,8 +180,8 @@ class EventDetail extends Component {
        .then((responseData) => {
            var success = responseData[PARAMs.SUCCESS];
            if(success) {
-               AlertIOS.alert('Event was successfully cancelled');
-               this.props.navigator.pop();
+	       AlertIOS.alert('Event was successfully cancelled');
+	       this.addEventToMyEvents(eventId);
            } else {
                var errMsg = responseData[PARAMs.ERRORMSG];
                AlertIOS.alert( 'There was an error canceling this event.', errMsg);
@@ -169,13 +206,11 @@ class EventDetail extends Component {
   	.then((responseData) => {
 		var success = responseData[PARAMs.SUCCESS];
                 if(success) {
-                        AlertIOS.alert( 'You successfully declined this event.', '');
+			this.removeEventFromStorage(eventId, 'You successfully declined this event.');
                 } else {
                         var errMsg = responseData[PARAMs.ERRORMSG];
                         AlertIOS.alert( 'There was an error declining this event.', errMsg);
                 }
-
-		this.props.navigator.pop();
   	})
   	.catch((error) => {
     		console.warn(error);
