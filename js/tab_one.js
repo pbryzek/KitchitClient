@@ -159,6 +159,7 @@ class TabOne extends Component {
    } 
  
   renderEvent(event) {
+       var eventTime = GLOBALs.trimTime(event.event_time);
        return (
             <TouchableHighlight onPress={() => this.showEventDetail(event)}  underlayColor='#dddddd'>
                 <View>
@@ -168,7 +169,7 @@ class TabOne extends Component {
                             style={styles.thumbnail} />
                         <View style={styles.rightContainer}>
                             <Text style={styles.title}>{event.host_name}</Text>
-                            <Text style={styles.author}>{event.event_time}</Text>
+                            <Text style={styles.author}>{eventTime}</Text>
                         </View>
                     </View>
                     <View style={styles.separator} />

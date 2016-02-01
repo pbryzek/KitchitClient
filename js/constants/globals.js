@@ -16,6 +16,11 @@ const {
 } = React;
 
 var exports = module.exports = {};
+exports.trimTime = function(timeStr) {
+	timeStr = timeStr.replace("T", " ");
+        timeStr = timeStr.substring(0, timeStr.length-5);
+        return timeStr;
+}
 exports.encodeQueryData = function(params) {
         var ret = [];
         for (var d in params)

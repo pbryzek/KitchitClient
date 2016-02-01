@@ -35,12 +35,13 @@ var styles = StyleSheet.create({
         alignItems: 'center'
     },
     rowContainer: {
-	flexDirection:'row' 
+	flexDirection:'row'
     },
     image: {
         width: 107,
         height: 165,
-        padding: 10
+        padding: 10,
+        alignItems: 'center'
     },
     address : {
         marginTop: 110,
@@ -56,7 +57,14 @@ var styles = StyleSheet.create({
     description: {
         padding: 10,
         fontSize: 15,
-        color: '#656565'
+        color: '#656565',
+        textAlign: 'center'
+    },
+    title : {
+        padding: 10,
+        fontSize: 15,
+        fontWeight: 'bold',
+        textAlign: 'center'
     }
 });
  
@@ -284,7 +292,7 @@ class EventDetail extends Component {
 
 	this.event = event;
         var imageURI = (typeof event.pic_url !== 'undefined') ? event.pic_url : '';
-        var description = (typeof event.host_name !== 'undefined') ? event.host_name : '';
+        var hostName = (typeof event.host_name !== 'undefined') ? event.host_name : '';
 	var displayAcceptButtons = true;
         
         var acceptBtn;
@@ -298,6 +306,8 @@ class EventDetail extends Component {
 	    cancelBtn = <Button style={{fontSize: 20, color: 'red'}} onPress={this.cancelPress.bind(this)}>Cancel Event</Button>;
             checkinBtn = <Button style={{fontSize: 20, color: 'green', marginRight:10}} onPress={this.checkinPress.bind(this)}>Checkin</Button>; 
         }
+
+        var eventTime = GLOBALs.trimTime(event.event_time);
 
         return (
 	<View>
@@ -314,20 +324,26 @@ class EventDetail extends Component {
 		  onPress={this.getDirections.bind(this)}
 		  >Directions</Text>
 
-            <View style={styles.container}>
+	    <View style={styles.container}>
                 <Image style={styles.image} source={{uri: imageURI}} />
-		<View style={styles.rowContainer}>
-                	<Text style={styles.description}>{description}</Text>
-			<Text style={styles.description}>{event.event_time}</Text>
-		</View>
-		<View style={styles.rowContainer}>
-		{acceptBtn}
-		{rejectBtn}
-		{checkinBtn}
-		{cancelBtn}
+ 	    </View>
+	    <View style={styles.rowContainer}>
+		<Text style={styles.title}>Host Name: </Text>
+                <Text style={styles.description}>{hostName}</Text>
+	    </View>
+            <View style={styles.rowContainer}>
+	        <Text style={styles.title}>Host Time:</Text>
+	        <Text style={styles.description}>{eventTime}</Text>
+	    </View>
+	    <View style={styles.container}>
+   	        <View style={styles.rowContainer}>
+		    {acceptBtn}
+		    {rejectBtn}
+		    {checkinBtn}
+		    {cancelBtn}
 		</View>
 	    </View>
-	   </View>
+	    </View>
         );
     }
 }
