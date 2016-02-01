@@ -9,6 +9,7 @@ var GLOBALs = require('./constants/globals.js');
 var MapView = require('react-native-maps');
 var store = require('react-native-simple-store');
 var STORAGE = require('./constants/constants_storage.js');
+var RNGeocoder = require('react-native-geocoder');
 
 const {
     LinkingIOS,
@@ -41,8 +42,13 @@ var styles = StyleSheet.create({
         height: 165,
         padding: 10
     },
+    address : {
+        marginTop: 110,
+        fontSize: 15,
+        textAlign: 'center',
+    },
     directions: {
-	marginTop: 110,
+	marginTop: 10,
         fontSize: 15,
 	textAlign: 'center',
         color: '#0645AD'
@@ -55,7 +61,32 @@ var styles = StyleSheet.create({
 });
  
 class EventDetail extends Component {
-    addEventToMyEvents(eventId) {
+    constructor(props) {
+        super(props);
+
+        var event = this.props.event;
+        this.address = '';
+        var location = {
+            latitude: event.host_latitude,
+            longitude: event.host_longitude
+        };
+        RNGeocoder.reverseGeocodeLocation(location, (err, data) => {
+            if (err) {
+                return;
+            }
+            var location = data[0];
+            var postal = location["postalCode"];
+            var state = location["administrativeArea"];
+            var street = location["thoroughfare"];
+            var streetNum = location["subThoroughfare"];
+            var city = location["locality"];
+
+            var address = streetNum + " "  + street + ", " + city + ", " + state + " " + postal;
+            this.address = address;
+            this.forceUpdate();
+        });
+    }
+    cancelEvent(eventId) {
         store.get(STORAGE.UPCOMING_EVENTS).then((upComingEvents) => {
             store.get(STORAGE.MY_EVENTS).then((myEvents) => {
 		var myNewEvents = [];
@@ -75,43 +106,33 @@ class EventDetail extends Component {
         })
         .done();
     }
-    removeEventFromStorage(removeEvent, alertMsg) {
-        var eventId = removeEvent.id;
+    addEventToMyEventsStorage(addEvent) {
+        var eventId = addEvent.id;
         store.get(STORAGE.MY_EVENTS).then((events) => {
-	    if(events && events.length > 0) {
-	    var doSave = false;
-            var eventsLength = events.length;
-            for (var i = 0; i < eventsLength; i++) {
-                var event = events[i];
-                if (event.id == eventId) {
-		    doSave = true;
-                    events.push(event);
-                }
-            }
-	    if(doSave) {
+            if(events && events.length > 0) {
+		events.push(addEvent);
                 store.save(STORAGE.MY_EVENTS, events).done();
-            }
             } else {
-                var eventsArr = []; 
-                eventsArr.push(removeEvent);
-		store.save(STORAGE.MY_EVENTS, eventsArr).done();
+                var eventsArr = [];
+                eventsArr.push(addEvent);
+                store.save(STORAGE.MY_EVENTS, eventsArr).done();
             }
- 	}).done();
+        }).done();
+    }
+    removeEventFromUpcomingStorage(removeEvent) {
+        var eventId = removeEvent.id;
         store.get(STORAGE.UPCOMING_EVENTS).then((events) => {
 	    var newEvents = [];
-	    if (events && events.length > 0) {
-	    for (var i = 0; i < events.length; i++) {
+	    var eventsLength = events.length;
+	    if (events && eventsLength > 0) {
+	    for (var i = 0; i < eventsLength; i++) {
                 var event = events[i];
                 if (event.id != eventId) {
                     newEvents.push(event);
                 }
             }
 	    } 
-            store.save(STORAGE.UPCOMING_EVENTS, newEvents).then(() => {
-	        AlertIOS.alert(alertMsg);
-	        this.props.navigator.pop();
-            })
-            .done();
+            store.save(STORAGE.UPCOMING_EVENTS, newEvents).done();
         })
         .done();
     }
@@ -133,7 +154,10 @@ class EventDetail extends Component {
         .then((responseData) => {
 		var success = responseData[PARAMs.SUCCESS];
 		if(success) {
-			this.removeEventFromStorage(event, 'You successfully accepted this event.');
+			AlertIOS.alert('You successfully accepted this event.');
+			this.addEventToMyEventsStorage(event);
+			this.removeEventFromUpcomingStorage(event);
+			this.props.navigator.pop();
 		} else {
 			var errMsg = responseData[PARAMs.ERRORMSG];
 			AlertIOS.alert( 'There was an error accepting this event.', errMsg);
@@ -204,7 +228,8 @@ class EventDetail extends Component {
            var success = responseData[PARAMs.SUCCESS];
            if(success) {
 	       AlertIOS.alert('Event was successfully cancelled');
-	       this.addEventToMyEvents(eventId);
+	       this.cancelEvent(eventId);
+               this.props.navigator.pop();
            } else {
                var errMsg = responseData[PARAMs.ERRORMSG];
                AlertIOS.alert( 'There was an error canceling this event.', errMsg);
@@ -229,7 +254,9 @@ class EventDetail extends Component {
   	.then((responseData) => {
 		var success = responseData[PARAMs.SUCCESS];
                 if(success) {
-			this.removeEventFromStorage(event, 'You successfully declined this event.');
+			AlertIOS.alert('You successfully declined this event.');
+			this.removeEventFromUpcomingStorage(event);
+			this.props.navigator.pop();
                 } else {
                         var errMsg = responseData[PARAMs.ERRORMSG];
                         AlertIOS.alert( 'There was an error declining this event.', errMsg);
@@ -246,6 +273,7 @@ class EventDetail extends Component {
       		latitudeDelta: 0.01,
       		longitudeDelta: 0.01,
     	};
+
 	var markers = [{
     	    latitude: event.host_latitude,
     	    longitude: event.host_longitude,
@@ -265,7 +293,7 @@ class EventDetail extends Component {
         var cancelBtn;
         if (this.props.displayAcceptBtns) {
             acceptBtn = <Button style={{fontSize: 20, color: 'green', marginRight:10}} onPress={this.acceptPress.bind(this)}>Accept</Button>;
-            rejectBtn = <Button style={{fontSize: 20, color: 'red'}} onPress={this.declinePress.bind(this)}>Reject</Button>;
+            rejectBtn = <Button style={{fontSize: 20, color: 'red'}} onPress={this.declinePress.bind(this)}>Decline</Button>;
         } else {
 	    cancelBtn = <Button style={{fontSize: 20, color: 'red'}} onPress={this.cancelPress.bind(this)}>Cancel Event</Button>;
             checkinBtn = <Button style={{fontSize: 20, color: 'green', marginRight:10}} onPress={this.checkinPress.bind(this)}>Checkin</Button>; 
@@ -278,6 +306,9 @@ class EventDetail extends Component {
                 style={styles.map}
                 initialRegion={initialRegion}
             />
+
+            <Text style={styles.address}
+                  >{this.address}</Text>
 
 	    <Text style={styles.directions}
 		  onPress={this.getDirections.bind(this)}

@@ -78,6 +78,17 @@ class TabTwo extends Component {
     })
     .done();
 
+    store.get(STORAGE.MY_EVENTS).then((myEvents) => {
+        var newMyEvents = [];
+        for(var i = 0; i < myEvents.length; i++) {
+            var myEvent = myEvents[i];
+            if (myEvent.id != event.id) {
+                newMyEvents.push(myEvent);
+            }
+        }
+        store.save(STORAGE.MY_EVENTS,newMyEvents).done();
+    }).done();
+
     fetch(cancelEventPath)
        .then((response) => response.json())
        .then((responseData) => {
@@ -126,12 +137,7 @@ class TabTwo extends Component {
 
   refreshView() {
       store.get(STORAGE.MY_EVENTS).then((myEvents) => {
-if(myEvents) {
-console.log("my = " + myEvents.length);
-console.log("this = " + this.events.length);
-}
           if (myEvents && myEvents.length != this.events.length) {
-console.log("refresh 2");
               this.events = myEvents;
               this.updateDates();
           }
@@ -183,6 +189,9 @@ console.log("refresh 2");
        })
        .done();
    }
+   okPressed() {
+
+   }
   setDate(date) {
     var indexOfT = date.indexOf("T");
     var dateFormat = date.substring(0, indexOfT);
@@ -190,7 +199,7 @@ console.log("refresh 2");
     for (var i = 0; i < this.eventDates.length; i++) {
         var d = this.eventDates[i];
         if (d == dateFormat) {
-	    Alert.alert( 'Upcoming Event!', 'You have an upcoming event, do you want to cancel it?', [ {text: 'OK', onPress: () => console.log("OK pressed")}, {text: 'View', onPress: () => this.viewEvent(d)}, {text: 'Cancel Event', onPress: () => this.cancelEvent(d), style:'cancel'}, ] )
+	    Alert.alert( 'Upcoming Event!', 'You have an upcoming event, do you want to cancel it?', [ {text: 'OK', onPress: () => this.okPressed()}, {text: 'View', onPress: () => this.viewEvent(d)}, {text: 'Cancel Event', onPress: () => this.cancelEvent(d), style:'cancel'}, ] )
         }
     }
   }
